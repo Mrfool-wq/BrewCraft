@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Potion Recipe Builder</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(180deg, #1a1a2e 0%, #0f3460 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 15px, rgba(0,0,0,.1) 15px, rgba(0,0,0,.1) 16px),
+                repeating-linear-gradient(90deg, transparent, transparent 15px, rgba(0,0,0,.1) 15px, rgba(0,0,0,.1) 16px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(0,0,0,0.5);
+            border: 4px solid #8b4513;
+            box-shadow: 0 8px 0 #654321, 0 12px 20px rgba(0,0,0,0.5);
+        }
+        
+        h1 {
+            font-size: clamp(16px, 4vw, 32px);
+            color: #ffaa00;
+            text-shadow: 3px 3px 0 #000;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .subtitle {
+            font-size: clamp(8px, 2vw, 12px);
+            color: #aaa;
+            text-shadow: 2px 2px 0 #000;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background: rgba(139, 69, 19, 0.3);
+            border: 4px solid #8b4513;
+            padding: 25px;
+            box-shadow: 0 6px 0 #654321, 0 10px 25px rgba(0,0,0,0.5);
+        }
+        
+        .panel-title {
+            font-size: clamp(12px, 3vw, 18px);
+            color: #55ff55;
+            text-shadow: 2px 2px 0 #000;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #55ff55;
+            padding-bottom: 10px;
+        }
+        
+        .ingredient-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .ingredient-btn {
+            background: linear-gradient(180deg, #666 0%, #333 100%);
+            border: 3px solid #999;
+            padding: 15px 10px;
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.1s;
+            text-shadow: 2px 2px 0 #000;
+            box-shadow: 0 4px 0 #222;
+            position: relative;
+            text-align: center;
+            line-height: 1.6;
+        }
+        
+        .ingredient-btn:hover {
+            background: linear-gradient(180deg, #777 0%, #444 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #222;
+        }
+        
+        .ingredient-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #222;
+        }
+        
+        .ingredient-btn.selected {
+            background: linear-gradient(180deg, #55ff55 0%, #2a7f2a 100%);
+            border-color: #7fff7f;
+            box-shadow: 0 4px 0 #1a5f1a, 0 0 20px rgba(85,255,85,0.5);
+        }
+        
+        .brewing-stand {
+            background: rgba(0,0,0,0.6);
+            border: 4px solid #444;
+            padding: 30px;
+            text-align: center;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .potion-display {
+            font-size: 14px;
+            line-height: 2;
+            color: #ffaa00;
+            text-shadow: 2px 2px 0 #000;
+        }
+        
+        .potion-name {
+            font-size: clamp(14px, 3vw, 20px);
+            color: #55ffff;
+            margin: 20px 0;
+            text-shadow: 2px 2px 0 #000;
+        }
+        
+        .potion-effect {
+            font-size: 11px;
+            color: #ffff55;
+            margin: 10px 0;
+            line-height: 1.8;
+        }
+        
+        .brewing-steps {
+            background: rgba(0,0,0,0.4);
+            border: 3px solid #666;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        
+        .step {
+            font-size: 10px;
+            color: #aaa;
+            margin: 10px 0;
+            padding-left: 20px;
+            position: relative;
+            line-height: 1.8;
+        }
+        
+        .step::before {
+            content: '▶';
+            position: absolute;
+            left: 0;
+            color: #ffaa00;
+        }
+        
+        .modifier-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 3px solid #666;
+        }
+        
+        .modifier-title {
+            font-size: 14px;
+            color: #ff55ff;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 0 #000;
+        }
+        
+        .modifier-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .modifier-btn {
+            background: linear-gradient(180deg, #8b008b 0%, #4b004b 100%);
+            border: 3px solid #ff00ff;
+            padding: 12px;
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 9px;
+            cursor: pointer;
+            text-shadow: 2px 2px 0 #000;
+            box-shadow: 0 3px 0 #3b003b;
+            transition: all 0.1s;
+        }
+        
+        .modifier-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 0 #3b003b;
+        }
+        
+        .modifier-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 0 #3b003b;
+        }
+        
+        .reset-btn {
+            background: linear-gradient(180deg, #ff5555 0%, #aa0000 100%);
+            border: 3px solid #ff7777;
+            padding: 15px 30px;
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 4px 0 #770000;
+            transition: all 0.1s;
+        }
+        
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #770000;
+        }
+        
+        .reset-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #770000;
+        }
+        
+        .empty-state {
+            font-size: 12px;
+            color: #666;
+            text-shadow: 2px 2px 0 #000;
+            line-height: 2;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            font-size: 10px;
+            color: #666;
+            text-shadow: 1px 1px 0 #000;
+        }
+        
+        .potion-icon {
+            font-size: 48px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧪 MINECRAFT POTION RECIPE BUILDER 🧪</h1>
+            <p class="subtitle">SELECT INGREDIENTS TO DISCOVER POTION RECIPES</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="panel">
+                <div class="panel-title">BASE INGREDIENTS</div>
+                <div class="ingredient-grid" id="baseIngredients"></div>
+                
+                <div class="modifier-section">
+                    <div class="modifier-title">MODIFIERS</div>
+                    <div class="modifier-grid" id="modifiers"></div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">BREWING STAND</div>
+                <div class="brewing-stand" id="brewingStand">
+                    <div class="empty-state">
+                        <div class="potion-icon">🧪</div>
+                        <p>SELECT AN INGREDIENT</p>
+                        <p>TO START BREWING</p>
+                    </div>
+                </div>
+                <button class="reset-btn" onclick="resetBrewing()">RESET</button>
+            </div>
+        </div>
+        
+        <footer>
+            CRAFT YOUR PERFECT POTION | MINECRAFT BREWING GUIDE 2025
+        </footer>
+    </div>
+    
+    <script>
+        const potions = {
+            'Nether Wart': {
+                name: 'Awkward Potion',
+                effect: 'Base for most potions',
+                duration: 'No effect',
+                steps: [
+                    'Fill glass bottles with water',
+                    'Add Blaze Powder to Brewing Stand as fuel',
+                    'Place Water Bottles in Brewing Stand',
+                    'Add Nether Wart to create Awkward Potion'
+                ],
+                icon: '🧪'
+            },
+            'Ghast Tear': {
+                name: 'Potion of Regeneration',
+                effect: 'Gradually restores health',
+                duration: '0:45',
+                steps: [
+                    'Brew Awkward Potion (Water Bottle + Nether Wart)',
+                    'Add Ghast Tear to Awkward Potion',
+                    'Creates Potion of Regeneration'
+                ],
+                icon: '💚'
+            },
+            'Magma Cream': {
+                name: 'Potion of Fire Resistance',
+                effect: 'Immunity to fire and lava',
+                duration: '3:00',
+                steps: [
+                    'Brew Awkward Potion (Water Bottle + Nether Wart)',
+                    'Add Magma Cream to Awkward Potion',
+                    'Creates Potion of Fire Resistance'
+                ],
+                icon: '🔥'
+            },
+            'Sugar': {
+                name: 'Potion of Swiftness',
+                effect: 'Increased movement speed',
+                duration: '3:00',
+                steps: [
+                    'Brew Awkward Potion (Water Bottle + Nether Wart)',
+                    'Add Sugar to Awkward Potion',
+                    'Creates Potion of Swiftness'
+                ],
+                icon: '⚡'
+            },
+            'Blaze Powder': {
+                name: 'Potion of Strength',
+                effect: '+3 melee damage',
+                duration: '3:00',
+                steps: [
+                    'Brew Awkward Potion (Water Bottle + Nether Wart)',
+                    'Add Blaze Powder to Awkward Potion',
+                    'Creates Potion of Strength'
+                ],
+                icon: '💪'
+            },
+            "Rabbit's Foot": {
+                name: 'Potion of Leaping',
+                effect: 'Higher jump height (+0.50)',
+                duration: '3:00',
+                steps: [
+                    'Brew Awkward Potion (Water Bottle + Nether Wart)',
+                    "Add Rabbit's Foot to Awkward Potion",
+                    'Creates Potion of Leaping'
+                ],
+                icon: '🐰'
+            },
+            'Golden Carrot': {
+                name: 'Potion of Night Vision',
+                effect: 'See clearly in darkness',
+                duration: '3:00',
+                steps: [
+                    'Brew Awkward Potion (Water Bottle + Nether Wart)',
+                    'Add Golden Carrot to Awkward Potion',
+                    'Creates Potion of Night Vision'
+                ],
+                icon: '👁️'
+            },
+            'Pufferfish': {
+                name: 'Potion of Water Breathing',
+                effect: 'Allows underwater breathing',
+                duration: '3:00',
+                steps: [
+                    'Brew Awkward Potion (Water Bottle + Nether Wart)',
+                    'Add Pufferfish to Awkward Potion',
+                    'Creates Potion of Water Breathing'
+                ],
+                icon: '🐡'
+            },
+            'Glistering Melon': {
+                name: 'Potion of Healing',
+                effect: 'Instantly restores +4 HP',
+                duration: 'Instant',
+                steps: [
+                    'Brew Awkward Potion (Water Bottle + Nether Wart)',
+                    'Add Glistering Melon to Awkward Potion',
+                    'Creates Potion of Healing'
+                ],
+                icon: '❤️'
+            },
+            'Spider Eye': {
+                name: 'Potion of Poison',
+                effect: 'Inflicts poison damage',
+                duration: '0:45',
+                steps: [
+                    'Brew Awkward Potion (Water Bottle + Nether Wart)',
+                    'Add Spider Eye to Awkward Potion',
+                    'Creates Potion of Poison'
+                ],
+                icon: '🕷️'
+            },
+            'Phantom Membrane': {
+                name: 'Potion of Slow Falling',
+                effect: 'Slows falling speed',
+                duration: '1:30',
+                steps: [
+                    'Brew Awkward Potion (Water Bottle + Nether Wart)',
+                    'Add Phantom Membrane to Awkward Potion',
+                    'Creates Potion of Slow Falling'
+                ],
+                icon: '🪶'
+            },
+            'Turtle Shell': {
+                name: 'Potion of the Turtle Master',
+                effect: 'Resistance IV + Slowness IV',
+                duration: '0:40',
+                steps: [
+                    'Brew Awkward Potion (Water Bottle + Nether Wart)',
+                    'Add Turtle Shell to Awkward Potion',
+                    'Creates Potion of the Turtle Master'
+                ],
+                icon: '🐢'
+            }
+        };
+        
+        const modifiers = {
+            'Redstone Dust': {
+                effect: 'Extends duration (e.g., 3:00 → 8:00)',
+                description: 'Prolongs potion effects'
+            },
+            'Glowstone Dust': {
+                effect: 'Increases potency to Level II',
+                description: 'Enhances potion strength'
+            },
+            'Gunpowder': {
+                effect: 'Converts to Splash Potion',
+                description: 'Makes potion throwable'
+            },
+            "Dragon's Breath": {
+                effect: 'Converts to Lingering Potion',
+                description: 'Creates area cloud effect'
+            }
+        };
+        
+        let selectedIngredient = null;
+        let selectedModifier = null;
+        
+        function initializeIngredients() {
+            const baseContainer = document.getElementById('baseIngredients');
+            Object.keys(potions).forEach(ingredient => {
+                const btn = document.createElement('button');
+                btn.className = 'ingredient-btn';
+                btn.textContent = ingredient;
+                btn.onclick = () => selectIngredient(ingredient);
+                baseContainer.appendChild(btn);
+            });
+            
+            const modifierContainer = document.getElementById('modifiers');
+            Object.keys(modifiers).forEach(modifier => {
+                const btn = document.createElement('button');
+                btn.className = 'modifier-btn';
+                btn.textContent = modifier;
+                btn.onclick = () => applyModifier(modifier);
+                modifierContainer.appendChild(btn);
+            });
+        }
+        
+        function selectIngredient(ingredient) {
+            selectedIngredient = ingredient;
+            selectedModifier = null;
+            
+            document.querySelectorAll('.ingredient-btn').forEach(btn => {
+                btn.classList.remove('selected');
+                if (btn.textContent === ingredient) {
+                    btn.classList.add('selected');
+                }
+            });
+            
+            displayPotion(ingredient);
+        }
+        
+        function displayPotion(ingredient) {
+            const potion = potions[ingredient];
+            const brewingStand = document.getElementById('brewingStand');
+            
+            let html = `
+                <div class="potion-display">
+                    <div class="potion-icon">${potion.icon}</div>
+                    <div class="potion-name">${potion.name}</div>
+                    <div class="potion-effect">
+                        EFFECT: ${potion.effect}<br>
+                        DURATION: ${potion.duration}
+                    </div>
+                    <div class="brewing-steps">
+                        ${potion.steps.map(step => `<div class="step">${step}</div>`).join('')}
+                    </div>
+                </div>
+            `;
+            
+            if (selectedModifier) {
+                const mod = modifiers[selectedModifier];
+                html += `
+                    <div class="brewing-steps" style="margin-top: 15px; border-color: #ff00ff;">
+                        <div class="modifier-title" style="font-size: 12px; margin-bottom: 10px;">+ ${selectedModifier}</div>
+                        <div class="step" style="color: #ff55ff;">${mod.effect}</div>
+                        <div class="step" style="color: #ff55ff;">${mod.description}</div>
+                    </div>
+                `;
+            }
+            
+            brewingStand.innerHTML = html;
+        }
+        
+        function applyModifier(modifier) {
+            if (!selectedIngredient) {
+                alert('SELECT A BASE INGREDIENT FIRST!');
+                return;
+            }
+            
+            selectedModifier = modifier;
+            displayPotion(selectedIngredient);
+        }
+        
+        function resetBrewing() {
+            selectedIngredient = null;
+            selectedModifier = null;
+            
+            document.querySelectorAll('.ingredient-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            document.getElementById('brewingStand').innerHTML = `
+                <div class="empty-state">
+                    <div class="potion-icon">🧪</div>
+                    <p>SELECT AN INGREDIENT</p>
+                    <p>TO START BREWING</p>
+                </div>
+            `;
+        }
+        
+        initializeIngredients();
+    </script>
+</body>
+</html>
